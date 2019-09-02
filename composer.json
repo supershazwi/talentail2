@@ -16,11 +16,8 @@
         "league/flysystem-aws-s3-v3": "~1.0",
         "league/flysystem-cached-adapter": "~1.0",
         "parsedown/laravel": "^1.1",
-        "paypal/rest-api-sdk-php": "^1.13",
         "pusher/pusher-http-laravel": "^4.2",
         "pusher/pusher-php-server": "^3.2",
-        "srmklive/paypal": "~1.0",
-        "stripe/stripe-php": "^6.24",
         "superbalist/flysystem-google-storage": "^7.1",
         "superbalist/laravel-google-cloud-storage": "^2.0"
     },
