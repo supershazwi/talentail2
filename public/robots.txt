@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /faq/
+Disallow: /about-us/
+Disallow: /contact-us/
+Disallow: /terms-and-conditions/
+Disallow: /privacy-policy/
+Disallow: /login/
+Disallow: /register/
+Disallow: /discover/
+Disallow: /explore/
+Disallow: /profile/

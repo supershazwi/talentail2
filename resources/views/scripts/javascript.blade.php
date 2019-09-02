@@ -1,0 +1,24 @@
+<script src="/jquery/dist/jquery.min.js"></script>
+<script src="/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/chart.js/dist/Chart.min.js"></script>
+<script src="/libs/chart.js/Chart.extension.js"></script>
+<script src="/highlightjs/highlight.pack.min.js"></script>
+<script src="/flatpickr/dist/flatpickr.min.js"></script>
+<script src="/jquery-mask-plugin/dist/jquery.mask.min.js"></script>
+<script src="/list.js/dist/list.min.js"></script>
+<script src="/quill/dist/quill.min.js"></script>
+<script src="/dropzone/dist/min/dropzone.min.js"></script>
+<script src="/select2/dist/js/select2.min.js"></script>
+
+<script src="/js/charts.js"></script>
+<script src="/js/dashkit.js"></script>
+<script src="/js/dropdowns.js"></script>
+<script src="/js/dropzone.js"></script>
+<script src="/js/flatpickr.js"></script>
+<script src="/js/highlight.js"></script>
+<script src="/js/list.js"></script>
+<script src="/js/navbar.js"></script>
+<script src="/js/popover.js"></script>
+<script src="/js/quill.js"></script>
+<script src="/js/select2.js"></script>
+<script src="/js/tooltip.js"></script>
