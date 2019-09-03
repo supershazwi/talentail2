@@ -161,8 +161,7 @@ return [
         App\Providers\RouteServiceProvider::class,
 
 
-        Superbalist\LaravelGoogleCloudStorage\GoogleCloudStorageServiceProvider::class,
-        Pusher\Laravel\PusherServiceProvider::class,
+        Superbalist\LaravelGoogleCloudStorage\GoogleCloudStorageServiceProvider::class
     ],
 
     /*
