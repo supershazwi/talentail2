@@ -24,11 +24,13 @@ use Google\Cloud\Core\Exception\ServiceException;
 use Google\Cloud\Core\Iam\Iam;
 use Google\Cloud\Core\Iterator\ItemIterator;
 use Google\Cloud\Core\Iterator\PageIterator;
+use Google\Cloud\Core\Timestamp;
 use Google\Cloud\Core\Upload\ResumableUploader;
 use Google\Cloud\Core\Upload\StreamableUploader;
 use Google\Cloud\PubSub\Topic;
 use Google\Cloud\Storage\Connection\ConnectionInterface;
 use Google\Cloud\Storage\Connection\IamBucket;
+use Google\Cloud\Storage\SigningHelper;
 use GuzzleHttp\Psr7;
 use Psr\Http\Message\StreamInterface;
 
@@ -85,7 +87,7 @@ class Bucket
     private $info;
 
     /**
-     * @var Iam
+     * @var Iam|null
      */
     private $iam;
 
@@ -220,6 +222,7 @@ class Bucket
      * uploads.
      * @see https://cloud.google.com/storage/docs/json_api/v1/objects/insert Objects insert API documentation.
      * @see https://cloud.google.com/storage/docs/encryption#customer-supplied Customer-supplied encryption keys.
+     * @see https://github.com/google/php-crc32 crc32c PHP extension for hardware-accelerated validation hashes.
      *
      * @param string|resource|StreamInterface|null $data The data to be uploaded.
      * @param array $options [optional] {
@@ -229,10 +232,17 @@ class Bucket
      *           of type string or null.
      *     @type bool $resumable Indicates whether or not the upload will be
      *           performed in a resumable fashion.
-     *     @type bool $validate Indicates whether or not validation will be
-     *           applied using md5 hashing functionality. If true and the
-     *           calculated hash does not match that of the upstream server the
-     *           upload will be rejected.
+     *     @type bool|string $validate Indicates whether or not validation will
+     *           be applied using md5 or crc32c hashing functionality. If
+     *           enabled, and the calculated hash does not match that of the
+     *           upstream server, the upload will be rejected. Available options
+     *           are `true`, `false`, `md5` and `crc32`. If true, either md5 or
+     *           crc32c will be chosen based on your platform. If false, no
+     *           validation hash will be sent. Choose either `md5` or `crc32` to
+     *           force a hash method regardless of performance implications. In
+     *           PHP versions earlier than 7.4, performance will be very
+     *           adversely impacted by using crc32c unless you install the
+     *           `crc32c` PHP extension. **Defaults to** `true`.
      *     @type int $chunkSize If provided the upload will be done in chunks.
      *           The size must be in multiples of 262144 bytes. With chunking
      *           you have increased reliability at the risk of higher overhead.
@@ -252,11 +262,11 @@ class Bucket
      *           `"projectPrivate"`, and `"publicRead"`.
      *     @type array $metadata The full list of available options are outlined
      *           at the [JSON API docs](https://cloud.google.com/storage/docs/json_api/v1/objects/insert#request-body).
-     *     @type array $metadata['metadata'] User-provided metadata, in key/value pairs.
+     *     @type array $metadata.metadata User-provided metadata, in key/value pairs.
      *     @type string $encryptionKey A base64 encoded AES-256 customer-supplied
      *           encryption key. If you would prefer to manage encryption
      *           utilizing the Cloud Key Management Service (KMS) please use the
-     *           $metadata['kmsKeyName'] setting. Please note if using KMS the
+     *           `$metadata.kmsKeyName` setting. Please note if using KMS the
      *           key ring must use the same location as the bucket.
      *     @type string $encryptionKeySHA256 Base64 encoded SHA256 hash of the
      *           customer-supplied encryption key. This value will be calculated
@@ -552,11 +562,32 @@ class Bucket
     /**
      * Create a Cloud PubSub notification.
      *
+     * Please note, the desired topic must be given the IAM role of
+     * "pubsub.publisher" from the service account associated with the project
+     * which contains the bucket you would like to receive notifications from.
+     * Please see the example below for a programmatic example of achieving
+     * this.
+     *
      * Example:
      * ```
-     * // Assume the topic uses the same project ID as that configured on the
-     * // existing client.
-     * $notification = $bucket->createNotification('my-topic');
+     * // Update the permissions on the desired topic prior to creating the
+     * // notification.
+     * use Google\Cloud\Core\Iam\PolicyBuilder;
+     * use Google\Cloud\PubSub\PubSubClient;
+     *
+     * $pubSub = new PubSubClient();
+     * $topicName = 'my-topic';
+     * $serviceAccountEmail = $storage->getServiceAccount();
+     * $topic = $pubSub->topic($topicName);
+     * $iam = $topic->iam();
+     * $updatedPolicy = (new PolicyBuilder($iam->policy()))
+     *     ->addBinding('roles/pubsub.publisher', [
+     *         "serviceAccount:$serviceAccountEmail"
+     *     ])
+     *     ->result();
+     * $iam->setPolicy($updatedPolicy);
+     *
+     * $notification = $bucket->createNotification($topicName);
      * ```
      *
      * ```
@@ -566,6 +597,9 @@ class Bucket
      *
      * ```
      * // Provide a Topic object from the Cloud PubSub component.
+     * use Google\Cloud\PubSub\PubSubClient;
+     *
+     * $pubSub = new PubSubClient();
      * $topic = $pubSub->topic('my-topic');
      * $notification = $bucket->createNotification($topic);
      * ```
@@ -581,8 +615,9 @@ class Bucket
      * ```
      *
      * @codingStandardsIgnoreStart
-     * @see https://cloud.google.com/storage/docs/pubsub-notifications Cloud PubSub Notifications
+     * @see https://cloud.google.com/storage/docs/pubsub-notifications Cloud PubSub Notifications.
      * @see https://cloud.google.com/storage/docs/json_api/v1/notifications/insert Notifications insert API documentation.
+     * @see https://cloud.google.com/storage/docs/reporting-changes Registering Object Changes.
      * @codingStandardsIgnoreEnd
      *
      * @param string|Topic $topic The topic used to publish notifications.
@@ -752,6 +787,7 @@ class Bucket
      * @see https://cloud.google.com/storage/docs/json_api/v1/buckets/patch Buckets patch API documentation.
      * @see https://cloud.google.com/storage/docs/key-terms#bucket-labels Bucket Labels
      *
+     * @codingStandardsIgnoreStart
      * @param array $options [optional] {
      *     Configuration options.
      *
@@ -814,7 +850,17 @@ class Bucket
      *     @type int $retentionPolicy.retentionPeriod Specifies the duration
      *           that objects need to be retained, in seconds. Retention
      *           duration must be greater than zero and less than 100 years.
+     *     @type array $iamConfiguration The bucket's IAM configuration.
+     *     @type bool $iamConfiguration.bucketPolicyOnly.enabled If set and
+     *           true, access checks only use bucket-level IAM policies or
+     *           above. When enabled, requests attempting to view or manipulate
+     *           ACLs will fail with error code 400. **NOTE**: Before using
+     *           Bucket Policy Only, please review the
+     *           [feature documentation](https://cloud.google.com/storage/docs/bucket-policy-only),
+     *           as well as
+     *           [Should You Use Bucket Policy Only](https://cloud.google.com/storage/docs/bucket-policy-only#should-you-use)
      * }
+     * @codingStandardsIgnoreEnd
      * @return array
      */
     public function update(array $options = [])
@@ -1209,6 +1255,93 @@ class Bucket
 
         return $this->info = $this->connection->lockRetentionPolicy(
             $options + $this->identity
+        );
+    }
+
+    /**
+     * Create a Signed URL listing objects in this bucket.
+     *
+     * Example:
+     * ```
+     * $url = $bucket->signedUrl(time() + 3600);
+     * ```
+     *
+     * ```
+     * // Use V4 Signing
+     * $url = $bucket->signedUrl(time() + 3600, [
+     *     'version' => 'v4'
+     * ]);
+     * ```
+     *
+     * @see https://cloud.google.com/storage/docs/access-control/signed-urls Signed URLs
+     *
+     * @param Timestamp|\DateTimeInterface|int $expires Specifies when the URL
+     *        will expire. May provide an instance of {@see Google\Cloud\Core\Timestamp},
+     *        [http://php.net/datetimeimmutable](`\DateTimeImmutable`), or a
+     *        UNIX timestamp as an integer.
+     * @param array $options {
+     *     Configuration Options.
+     *
+     *     @type string $cname The CNAME for the bucket, for instance
+     *           `https://cdn.example.com`. **Defaults to**
+     *           `https://storage.googleapis.com`.
+     *     @type string $contentMd5 The MD5 digest value in base64. If you
+     *           provide this, the client must provide this HTTP header with
+     *           this same value in its request. If provided, take care to
+     *           always provide this value as a base64 encoded string.
+     *     @type string $contentType If you provide this value, the client must
+     *           provide this HTTP header set to the same value.
+     *     @type bool $forceOpenssl If true, OpenSSL will be used regardless of
+     *           whether phpseclib is available. **Defaults to** `false`.
+     *     @type array $headers If additional headers are provided, the server
+     *           will check to make sure that the client provides matching
+     *           values. Provide headers as a key/value array, where the key is
+     *           the header name, and the value is an array of header values.
+     *           Headers with multiple values may provide values as a simple
+     *           array, or a comma-separated string. For a reference of allowed
+     *           headers, see [Reference Headers](https://cloud.google.com/storage/docs/xml-api/reference-headers).
+     *           Header values will be trimmed of leading and trailing spaces,
+     *           multiple spaces within values will be collapsed to a single
+     *           space, and line breaks will be replaced by an empty string.
+     *           V2 Signed URLs may not provide `x-goog-encryption-key` or
+     *           `x-goog-encryption-key-sha256` headers.
+     *     @type array $keyFile Keyfile data to use in place of the keyfile with
+     *           which the client was constructed. If `$options.keyFilePath` is
+     *           set, this option is ignored.
+     *     @type string $keyFilePath A path to a valid keyfile to use in place
+     *           of the keyfile with which the client was constructed.
+     *     @type string|array $scopes One or more authentication scopes to be
+     *           used with a key file. This option is ignored unless
+     *           `$options.keyFile` or `$options.keyFilePath` is set.
+     *     @type array $queryParams Additional query parameters to be included
+     *           as part of the signed URL query string. For allowed values,
+     *           see [Reference Headers](https://cloud.google.com/storage/docs/xml-api/reference-headers#query).
+     *     @type string $version One of "v2" or "v4". *Defaults to** `"v2"`.
+     * }
+     * @return string
+     * @throws \InvalidArgumentException If the given expiration is invalid or in the past.
+     * @throws \InvalidArgumentException If the given `$options.method` is not valid.
+     * @throws \InvalidArgumentException If the given `$options.keyFilePath` is not valid.
+     * @throws \InvalidArgumentException If the given custom headers are invalid.
+     * @throws \RuntimeException If the keyfile does not contain the required information.
+     */
+    public function signedUrl($expires, array $options = [])
+    {
+        // May be overridden for testing.
+        $signingHelper = $this->pluck('helper', $options, false)
+            ?: SigningHelper::getHelper();
+
+        $resource = sprintf(
+            '/%s',
+            $this->identity['bucket']
+        );
+
+        return $signingHelper->sign(
+            $this->connection,
+            $expires,
+            $resource,
+            null,
+            $options
         );
     }
 

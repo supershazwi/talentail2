@@ -55,74 +55,15 @@
 
           <!-- Heading -->
           <h1 class="display-4 text-center mb-3" style="margin-bottom: 2.25rem !important;">
-            Welcome back!
+            Well this didn't age well!
           </h1>
           
+          <p class="text-center">I've decided to put a stop on pursuing Talentail as I have not managed to turn this into a self-sustaining creature.</p>
           
+          <p class="text-center">You can find me on <a href="https://www.linkedin.com/in/shazwi/">LinkedIn</a> & <a href="https://twitter.com/supershazwi">Twitter</a>.</p>
+
           <!-- Form -->
-          <form method="POST" action="{{ route('login') }}" aria-label="{{ __('Login') }}">
-            @csrf
-
-            <!-- Email address -->
-            <div class="form-group">
-
-              <!-- Label -->
-              <label>Email Address</label>
-
-              <!-- Input -->
-              <input type="email" name="email" class="form-control" placeholder="Name@address.com" value="{{ old('email') }}" required>
-
-              @if ($errors->has('email'))
-                  <span class="invalid-feedback" role="alert">
-                      <strong>{{ $errors->first('email') }}</strong>
-                  </span>
-              @endif
-
-            </div>
-
-            <!-- Password -->
-            <div class="form-group">
-
-              <div class="row">
-                <div class="col">
-                      
-                  <!-- Label -->
-                  <label>Password</label>
-
-                </div>
-                <div class="col-auto">
-                  
-                  <!-- Help text -->
-                  <a href="/password/reset" class="form-text small text-muted">
-                    Forgot password?
-                  </a>
-
-                </div>
-              </div> <!-- / .row -->
-
-                <!-- Input -->
-                <input type="password" name="password" class="form-control form-control-appended" placeholder="Enter your password" required>
-
-                @if ($errors->has('password'))
-                    <span class="invalid-feedback" role="alert">
-                        <strong>{{ $errors->first('password') }}</strong>
-                    </span>
-                @endif
-            </div>
-
-            <!-- Submit -->
-            <button class="btn btn-lg btn-block btn-primary mb-3" type="submit">
-              Log in
-            </button>
-
-            <!-- Link -->
-            <div class="text-center">
-              <small class="text-muted text-center">
-                Don't have an account yet? <a href="/register">Register</a>.
-              </small>
-            </div>
-            
-          </form>
+          
 
         </div>
       </div> <!-- / .row -->

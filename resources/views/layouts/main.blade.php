@@ -163,9 +163,9 @@
             </div>
           </div>
         @else
-          <a class="btn btn-primary mr-auto" href="/login">
+          <!-- <a class="btn btn-primary mr-auto" href="/login">
               Login
-          </a>
+          </a> -->
         @endif
     </div>
 

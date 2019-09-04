@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.2.1 - 2019-04-18
+
+* Fix #57: `ErrorException thrown with message "array_merge(): Argument #2 is not an array"` when defining service account
+
+## 2.2.0 - 2019-04-15
+
+* Allow users to authenticate to Google Cloud Storage directly with env variable without using a json file
+
+## 2.1.2 - 2019-02-13
+
+* Replace null coalescing operator with backwards compatible laravel `array_get`
+
+## 2.1.1 - 2019-02-11
+
+* Fix `Call to undefined method Superbalist\LaravelGoogleCloudStorage\GoogleCloudStorageServiceProvider::createCacheStore()` bug when using caching
+
+## 2.1.0 - 2018-12-18
+
+* This Allows optionally configuring `visibility`, `disable_asserts` and `url` options on the filesystem
+* Add optional caching layer around the adapter
+
+## 2.0.0 - 2018-02-07
+
+* Allow superbalist/flysystem-google-storage ^7.0
+
 ## 1.0.5 - 2018-02-02
 
 * Allow superbalist/flysystem-google-storage ^6.0

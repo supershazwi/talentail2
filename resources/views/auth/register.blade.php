@@ -34,80 +34,12 @@
 
           <!-- Heading -->
           <h1 class="display-4 text-center mb-3" style="margin-bottom: 2.25rem !important;">
-            Begin your journey. 
+            Well this didn't age well!
           </h1>
           
+          <p class="text-center">I've decided to put a stop on pursuing Talentail as I have not managed to turn this into a self-sustaining creature.</p>
           
-          <!-- Form -->
-          <form method="POST" action="{{ route('register') }}" aria-label="{{ __('Register') }}">
-            @csrf
-            <input type="hidden" name="referral-link" value="{{Session::get('referral-link')}}" />
-            <!-- Name -->
-            <div class="form-group">
-                <label>Name</label>
-
-                <input id="name" type="text" class="form-control{{ $errors->has('name') ? ' is-invalid' : '' }}" name="name" value="{{ old('name') }}" placeholder="Name" required autofocus>
-
-                @if ($errors->has('name'))
-                    <span class="invalid-feedback" role="alert">
-                        <strong>{{ $errors->first('name') }}</strong>
-                    </span>
-                @endif
-            </div>
-
-            <!-- Email address -->
-            <div class="form-group">
-              <!-- Label -->
-              <label>Email Address</label>
-
-              <input id="email" type="text" class="form-control{{ $errors->has('email') ? ' is-invalid' : '' }}" name="email" value="{{ old('email') }}" placeholder="Name@address.com" required autofocus>
-
-              @if ($errors->has('email'))
-                  <span class="invalid-feedback" role="alert">
-                      <strong>{{ $errors->first('email') }}</strong>
-                  </span>
-              @endif
-            </div>
-
-            <!-- Password -->
-            <div class="form-group">
-
-              <label>Password</label>
-
-              <!-- Input group -->
-                <input id="password" type="password" class="form-control{{ $errors->has('password') ? ' is-invalid' : '' }}" name="password" placeholder="Password" required>
-
-                @if ($errors->has('password'))
-                    <span class="invalid-feedback" role="alert">
-                        <strong>{{ $errors->first('password') }}</strong>
-                    </span>
-                @endif
-            </div>
-
-            <div class="form-group">
-
-              <label>Confirm Password</label>
-
-              <!-- Input group -->
-               <input id="password-confirm" type="password" class="form-control" name="password_confirmation" placeholder="Confirm Password" required>
-            </div>
-
-            <!-- Submit -->
-            <button class="btn btn-lg btn-block btn-primary mb-3" type="submit">
-              Register
-            </button>
-
-            <!-- Link -->
-            <div class="text-center">
-                <small class="text-muted text-center">
-                  By clicking 'Create Account' you agree to our <a href="/terms-and-conditions">Terms of Service</a>.
-                </small>
-              <small class="text-muted text-center">
-                Already have an account? <a href="/login">Login</a>.
-              </small>
-            </div>
-            
-          </form>
+          <p class="text-center">You can find me on <a href="https://www.linkedin.com/in/shazwi/">LinkedIn</a> & <a href="https://twitter.com/supershazwi">Twitter</a>.</p>
 
         </div>
       </div> <!-- / .row -->

@@ -131,7 +131,7 @@
       </div>
     </div>
   </div> -->
-  @if(!Auth::id())
+  <!-- @if(!Auth::id())
   <hr style="margin-top: 5rem;"/>
   <div class="row justify-content-center" style="margin-top: 5rem; display: block; text-align: center;">
     <h1>
@@ -141,7 +141,7 @@
         Register
     </a>
   </div>
-  @endif
+  @endif -->
 </div>
 @endsection
 
